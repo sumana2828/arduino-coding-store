@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arduino Coding Store - সিকিউরড আপলোড ও ডাউনলোড সিস্টেম</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+
+    <!-- Header / Navbar -->
+    <header class="bg-indigo-900 text-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-microchip text-3xl text-amber-400"></i>
+                <span class="text-xl font-bold tracking-wide">Arduino Coding Store</span>
+            </div>
+            <nav class="hidden md:flex space-x-6 font-medium">
+                <a href="#home" class="hover:text-amber-400 transition">হোম</a>
+                <a href="#products" class="hover:text-amber-400 transition">প্রোডাক্টস ও কোড</a>
+                <a href="#admin-upload" class="text-amber-400 font-bold transition"><i class="fa-solid fa-lock mr-1"></i> এডমিন আপলোড</a>
+                <a href="#my-downloads" class="hover:text-amber-400 transition">আমার কোড ডাউনলোড</a>
+            </nav>
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleCart()" class="relative bg-indigo-800 p-2 rounded-full hover:bg-indigo-700 transition">
+                    <i class="fa-solid fa-cart-shopping text-xl"></i>
+                    <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="bg-gradient-to-r from-indigo-800 to-blue-900 text-white py-14 px-4 text-center">
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-3xl md:text-4xl font-bold mb-3">আরডুইনো প্রজেক্ট ও রেডিমেড সোর্স কোড মার্কেটপ্লেস</h1>
+            <p class="text-indigo-200 mb-6">বিকাশ পেমেন্টের মাধ্যমে ইনস্ট্যান্ট `.ino` ফাইল ডাউনলোড করুন।</p>
+            <a href="#products" class="bg-amber-400 text-indigo-950 font-bold px-6 py-2.5 rounded-lg shadow hover:bg-amber-300 transition">শপিং শুরু করুন</a>
+        </div>
+    </section>
+
+    <!-- Admin Code Upload Section (Secured with Secret PIN: 1986) -->
+    <section id="admin-upload" class="bg-amber-50 py-10 border-b border-amber-200">
+        <div class="container mx-auto px-4 max-w-2xl">
+            <div class="bg-white p-6 rounded-xl shadow-md border border-amber-300">
+                <h2 class="text-xl font-bold text-indigo-900 mb-2 flex items-center">
+                    <i class="fa-solid fa-shield-halved text-amber-600 mr-2"></i> সিকিউরড এডমিন কোড আপলোড প্যানেল
+                </h2>
+                <p class="text-xs text-gray-600 mb-4">এই প্যানেলটি শুধুমাত্র আপনার জন্য। নতুন কোড আপলোড করতে গোপন পিন কোড দিতে হবে।</p>
+                
+                <form id="upload-form" onsubmit="handleCodeUpload(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">গোপন পিন কোড (Secret PIN):</label>
+                        <input type="password" id="admin-secret-pin" required placeholder="গোপন পিন দিন" class="w-full border rounded p-2 text-sm focus:ring focus:ring-amber-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">প্রজেক্টের নাম:</label>
+                        <input type="text" id="up-title" required placeholder="যেমন: আরডুইনো অটো ইরিগেশন সিস্টেম" class="w-full border rounded p-2 text-sm focus:ring focus:ring-amber-200">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">মূল্য (টাকা):</label>
+                            <input type="number" id="up-price" required value="200" class="w-full border rounded p-2 text-sm focus:ring focus:ring-amber-200">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">ফাইল নির্বাচন (.ino):</label>
+                            <input type="file" id="up-file" accept=".ino,.txt" required class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">সংক্ষিপ্ত বিবরণ:</label>
+                        <textarea id="up-desc" rows="2" placeholder="প্রজেক্টটি সম্পর্কে কিছু লিখুন..." class="w-full border rounded p-2 text-sm focus:ring focus:ring-amber-200"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-900 text-white py-2.5 rounded-lg font-bold text-sm hover:bg-indigo-800 transition shadow">সিকিউরড আপলোড করুন</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content: Products & Source Codes -->
+    <main class="container mx-auto px-4 py-10 flex-grow">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold text-indigo-900 border-l-4 border-amber-400 pl-3">সকল প্রজেক্ট ও সোর্স কোড</h2>
+            <div class="flex space-x-2">
+                <button onclick="filterProducts('all')" class="px-4 py-1.5 bg-indigo-900 text-white rounded text-sm hover:bg-indigo-800 transition">সব</button>
+                <button onclick="filterProducts('code')" class="px-4 py-1.5 bg-gray-200 text-gray-700 rounded text-sm hover:bg-indigo-100 transition">সোর্স কোড</button>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        <div id="product-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamic products will be loaded here -->
+        </div>
+    </main>
+
+    <!-- My Download Section -->
+    <section id="my-downloads" class="bg-indigo-50 py-10 border-t border-indigo-100">
+        <div class="container mx-auto px-4">
+            <h2 class="text-2xl font-bold text-indigo-900 mb-4 border-l-4 border-indigo-600 pl-3">আপনার কেনা সোর্স কোড ও ডাউনলোড লিস্ট</h2>
+            <div id="download-list" class="bg-white p-6 rounded-xl shadow-sm border border-indigo-100">
+                <p class="text-gray-500 italic">এখনও কোনো কোড কেনা হয়নি।</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cart Drawer Modal -->
+    <div id="cart-drawer" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-end">
+        <div class="bg-white w-full max-w-md h-full flex flex-col shadow-xl overflow-y-auto">
+            <div class="p-4 bg-indigo-900 text-white flex justify-between items-center sticky top-0">
+                <h3 class="font-bold text-lg">শপিং কার্ট ও বিকাশ পেমেন্ট</h3>
+                <button onclick="toggleCart()" class="text-white hover:text-amber-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div id="cart-items" class="p-4 space-y-4 border-b"></div>
+
+            <div class="p-4 space-y-4 bg-gray-50 flex-grow">
+                <div class="flex justify-between font-bold text-lg">
+                    <span>মোট টাকা:</span>
+                    <span id="cart-total" class="text-indigo-900">৳ ০</span>
+                </div>
+
+                <div class="bg-pink-50 border border-pink-200 p-4 rounded-lg text-sm space-y-2">
+                    <p class="font-bold text-pink-700"><i class="fa-solid fa-wallet mr-1"></i> বিকাশ পেমেন্ট নাম্বার:</p>
+                    <div class="bg-white p-2 text-center font-bold text-pink-600 rounded border border-pink-300 text-base">
+                        01714969924
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">আপনার বিকাশ নাম্বার:</label>
+                    <input type="text" id="bkash-sender-number" placeholder="018xxxxxxxx" class="w-full border rounded p-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">বিকাশ ট্রানজ্যাকশন আইডি (TrxID):</label>
+                    <input type="text" id="bkash-trx-id" placeholder="TrxID দিন" class="w-full border rounded p-2 text-sm uppercase">
+                </div>
+
+                <button onclick="submitOrder()" class="w-full bg-pink-600 text-white py-3 rounded-lg font-bold hover:bg-pink-500 transition shadow">পেমেন্ট কনফার্ম ও কোড নিন</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-6 text-center text-sm">
+        <p>&copy; ২০২৬ আরডুইনো কোডিং স্টোর। বিকাশ হেল্পলাইন: 01714969924</p>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Default Sample Products
+        let products = [
+            {
+                id: 1,
+                title: "স্মার্ট হোম অটোমেশন ও ব্লুটুথ রিলের কোড",
+                category: "code",
+                price: 250,
+                image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400",
+                desc: "ব্লুটুথের মাধ্যমে লাইট ও ফ্যান কন্ট্রোল করার কমপ্লিট .ino সোর্স কোড।",
+                sourceCode: `#include <SoftwareSerial.h>\nSoftwareSerial BT(2, 3);\nconst int relayPin = 8;\nvoid setup() { pinMode(relayPin, OUTPUT); BT.begin(9600); }\nvoid loop() { /* Code logic */ }`
+            },
+            {
+                id: 2,
+                title: "আল্ট্রাসনিক ডিস্টেন্স মিটার প্রজেক্ট কোড",
+                category: "code",
+                price: 150,
+                image: "https://images.unsplash.com/photo-1555680202-c86f0e12f086?w=400",
+                desc: "HC-SR04 সেন্সর দিয়ে দূরত্ব মাপার নিখুঁত আরডুইনো সোর্স কোড।",
+                sourceCode: `#define trigPin 9\n#define echoPin 10\nvoid setup() { Serial.begin(9600); pinMode(trigPin, OUTPUT); pinMode(echoPin, INPUT); }`
+            }
+        ];
+
+        // LocalStorage support
+        if(localStorage.getItem('arduino_products')) {
+            products = JSON.parse(localStorage.getItem('arduino_products'));
+        }
+
+        let cart = [];
+        let purchasedCodes = [];
+
+        // Handle Secured Code Upload (Secret PIN: 1986)
+        function handleCodeUpload(event) {
+            event.preventDefault();
+            const secretPin = document.getElementById('admin-secret-pin').value.trim();
+
+            // Check Secret PIN
+            if(secretPin !== '1986') {
+                alert('ভুল গোপন পিন কোড! শুধুমাত্র এডমিন (আপনি) এই প্যানেল থেকে কোড আপলোড করতে পারবেন।');
+                return;
+            }
+
+            const title = document.getElementById('up-title').value;
+            const price = parseFloat(document.getElementById('up-price').value);
+            const desc = document.getElementById('up-desc').value;
+            const fileInput = document.getElementById('up-file');
+
+            if(fileInput.files.length === 0) {
+                alert('দয়া করে একটি .ino ফাইল সিলেক্ট করুন।');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const fileContent = e.target.result;
+                
+                const newProduct = {
+                    id: Date.now(),
+                    title: title,
+                    category: 'code',
+                    price: price,
+                    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400',
+                    desc: desc || 'নতুন আপলোড করা আরডুইনো সোর্স কোড প্রজেক্ট।',
+                    sourceCode: fileContent
+                };
+
+                products.unshift(newProduct);
+                localStorage.setItem('arduino_products', JSON.stringify(products));
+                
+                renderProducts();
+                document.getElementById('upload-form').reset();
+                alert('অভিনন্দন! গোপন পিন যাচাই সফল হয়েছে এবং আপনার সোর্স কোডটি ওয়েবসাইটে পাবলিশ করা হয়েছে।');
+                window.location.hash = '#products';
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Render Products
+        function renderProducts(filter = 'all') {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = '';
+            
+            const filtered = filter === 'all' ? products : products.filter(p => p.category === filter);
+            
+            filtered.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 flex flex-col justify-between hover:shadow-lg transition';
+                card.innerHTML = `
+                    <div>
+                        <img src="${product.image}" alt="${product.title}" class="w-full h-44 object-cover">
+                        <div class="p-4">
+                            <span class="text-xs font-semibold px-2.5 py-1 bg-indigo-100 text-indigo-800 rounded-full">সোর্স কোড</span>
+                            <h3 class="font-bold text-lg mt-2 text-indigo-900">${product.title}</h3>
+                            <p class="text-gray-600 text-sm mt-1">${product.desc}</p>
+                        </div>
+                    </div>
+                    <div class="p-4 pt-0 flex justify-between items-center border-t border-gray-50 mt-4">
+                        <span class="text-lg font-bold text-indigo-900">৳ ${product.price}</span>
+                        <button onclick="addToCart(${product.id})" class="bg-indigo-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-800 transition">কার্টে যোগ করুন</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterProducts(type) {
+            renderProducts(type);
+        }
+
+        // Cart Functions
+        function toggleCart() {
+            document.getElementById('cart-drawer').classList.toggle('hidden');
+        }
+
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            const existing = cart.find(item => item.id === productId);
+            if(existing) { existing.qty += 1; } 
+            else { cart.push({...product, qty: 1}); }
+            updateCartUI();
+            toggleCart();
+        }
+
+        function updateCartUI() {
+            const cartCount = document.getElementById('cart-count');
+            const cartItems = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+
+            cartCount.innerText = cart.reduce((sum, item) => sum + item.qty, 0);
+
+            if(cart.length === 0) {
+                cartItems.innerHTML = '<p class="text-gray-500 text-center py-4">আপনার কার্ট খালি রয়েছে।</p>';
+                cartTotal.innerText = '৳ ০';
+                return;
+            }
+
+            cartItems.innerHTML = '';
+            let total = 0;
+            cart.forEach(item => {
+                total += item.price * item.qty;
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center border-b pb-2';
+                div.innerHTML = `
+                    <div>
+                        <h4 class="font-semibold text-xs text-indigo-900">${item.title}</h4>
+                        <span class="text-xs text-gray-500">৳ ${item.price} × ${item.qty}</span>
+                    </div>
+                    <button onclick="removeFromCart(${item.id})" class="text-red-500 hover:text-red-700 text-sm"><i class="fa-solid fa-trash"></i></button>
+                `;
+                cartItems.appendChild(div);
+            });
+            cartTotal.innerText = `৳ ${total}`;
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCartUI();
+        }
+
+        function submitOrder() {
+            if(cart.length === 0) { alert('আপনার কার্ট খালি!'); return; }
+            const senderNum = document.getElementById('bkash-sender-number').value.trim();
+            const trxId = document.getElementById('bkash-trx-id').value.trim();
+
+            if(!senderNum || !trxId) {
+                alert('বিকাশ নাম্বার এবং ট্রানজ্যাকশন আইডি (TrxID) দিন।');
+                return;
+            }
+
+            cart.forEach(item => {
+                if(item.sourceCode && !purchasedCodes.some(p => p.id === item.id)) {
+                    purchasedCodes.push(item);
+                }
+            });
+
+            alert(`পেমেন্ট তথ্য জমা সফল হয়েছে!\nআপনার কোডগুলো ডাউনলোড সেকশনে আনলক করা হয়েছে।`);
+            cart = [];
+            updateCartUI();
+            toggleCart();
+            renderDownloads();
+            document.getElementById('my-downloads').scrollIntoView({behavior: 'smooth'});
+        }
+
+        function renderDownloads() {
+            const listContainer = document.getElementById('download-list');
+            if(purchasedCodes.length === 0) {
+                listContainer.innerHTML = '<p class="text-gray-500 italic">এখনও কোনো কোড কেনা হয়নি।</p>';
+                return;
+            }
+
+            listContainer.innerHTML = '';
+            purchasedCodes.forEach(item => {
+                const box = document.createElement('div');
+                box.className = 'bg-gray-50 p-4 rounded-lg border mb-4';
+                box.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-bold text-indigo-900">${item.title}</h4>
+                        <button onclick="downloadCodeFile('${item.title}', \`${encodeURIComponent(item.sourceCode)}\`)" class="bg-green-600 text-white text-xs px-3 py-1.5 rounded font-medium hover:bg-green-500 transition">
+                            <i class="fa-solid fa-download mr-1"></i> .ino ফাইল ডাউনলোড
+                        </button>
+                    </div>
+                    <pre class="bg-gray-950 text-green-400 p-3 rounded text-xs overflow-x-auto max-h-40"><code>${item.sourceCode}</code></pre>
+                `;
+                listContainer.appendChild(box);
+            });
+        }
+
+        function downloadCodeFile(title, encodedCode) {
+            const code = decodeURIComponent(encodedCode);
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${title.replace(/\s+/g, '_')}.ino`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initial Load
+        renderProducts();
+    </script>
+</body>
+</html>
